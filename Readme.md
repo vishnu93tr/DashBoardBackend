@@ -88,11 +88,13 @@ Create projects, executions, and test_cases tables
 
 Insert random test data for multiple projects over 100 days
 
-6. 🚀 Run the FastAPI Application
+### 6. 🚀 Run the FastAPI Application
 
 Start the development server:
 
+```bash
 uvicorn app.main:app --reload
+
 
 
 curl "http://127.0.0.1:8000/dashboard/summary?from_date=2025-01-01&to_date=2025-04-10"
