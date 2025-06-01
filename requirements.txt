@@ -9,7 +9,8 @@ pydantic~=2.9.2
 dotenv~=0.9.9
 db~=0.1.1
 
-# Compatible Langchain packages
-langchain==0.2.1
-langchain-openai==0.1.23
-langchain-community==0.0.21
+# Compatible LangChain stack
+langchain==0.1.16
+langchain-core==0.1.43
+langchain-openai==0.0.8
+langchain-community==0.0.32
