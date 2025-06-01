@@ -31,8 +31,8 @@ def get_executions_per_project(db: Session, project_name: str, from_date: date, 
 
 
 def get_pass_fail_trend(db: Session, project_name: str, from_date: date, to_date: date):
-    passed_case = case((TestCase.status == 'PASSED', 1), else_=0)
-    failed_case = case((TestCase.status == 'FAILED', 1), else_=0)
+    passed_case = case((func.lower(TestCase.status) == 'passed', 1), else_=0)
+    failed_case = case((func.lower(TestCase.status) == 'failed', 1), else_=0)
 
     stmt = (
         select(
@@ -40,6 +40,7 @@ def get_pass_fail_trend(db: Session, project_name: str, from_date: date, to_date
             func.sum(passed_case).label("passed"),
             func.sum(failed_case).label("failed")
         )
+        .select_from(Execution)
         .join(TestCase, TestCase.execution_id == Execution.id)
         .join(Project, Execution.project_id == Project.id)
         .where(and_(
@@ -68,7 +69,6 @@ def get_pass_fail_trend(db: Session, project_name: str, from_date: date, to_date
         })
 
     return result
-
 
 def get_average_execution_durations_trend(db: Session, project_name: str, from_date: date, to_date: date):
     stmt = (
