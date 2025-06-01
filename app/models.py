@@ -16,8 +16,14 @@ class Execution(Base):
     executed_at = Column(DateTime)
     triggered_by = Column(String)
 
+    total_tests = Column(Integer, default=0)
+    passed_tests = Column(Integer, default=0)
+    failed_tests = Column(Integer, default=0)
+    skipped_tests = Column(Integer, default=0)
+
     project = relationship("Project", back_populates="executions")
     test_cases = relationship("TestCase", back_populates="execution", cascade="all, delete-orphan")
+
 
 class TestCase(Base):
     __tablename__ = "test_cases"

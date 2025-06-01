@@ -51,8 +51,18 @@ for day_offset in range(100):
             session.add(execution)
             session.flush()  # Required to use execution.id
 
-            for i in range(random.randint(10, 30)):  # 10–30 test cases
+            passed = failed = skipped = 0
+            total_cases = random.randint(10, 30)
+
+            for i in range(total_cases):
                 status = random.choices(statuses, weights=weights, k=1)[0]
+                if status == "passed":
+                    passed += 1
+                elif status == "failed":
+                    failed += 1
+                else:
+                    skipped += 1
+
                 test_case = TestCase(
                     execution_id=execution.id,
                     name=f"TestCase_{i+1}",
@@ -61,6 +71,12 @@ for day_offset in range(100):
                     error_message=fake.sentence() if status == "failed" else None
                 )
                 session.add(test_case)
+
+            # Add test summary to execution
+            execution.total_tests = total_cases
+            execution.passed_tests = passed
+            execution.failed_tests = failed
+            execution.skipped_tests = skipped
 
 session.commit()
 session.close()
