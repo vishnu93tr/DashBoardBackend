@@ -1,5 +1,4 @@
 from datetime import date
-from typing import Union
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -64,4 +63,6 @@ def test_cases_by_project(
 def list_projects(db: Session = Depends(get_db)):
     project_names = get_all_projects(db)
     return {"projects": project_names}
+
+
 

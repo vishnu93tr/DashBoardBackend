@@ -1,15 +1,13 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, declarative_base
 
-from .database import Base
+Base = declarative_base()
 
-
-# in models.py
 class Project(Base):
     __tablename__ = "projects"
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True)
-    executions = relationship("Execution", back_populates="project")
+    executions = relationship("Execution", back_populates="project", cascade="all, delete-orphan")
 
 class Execution(Base):
     __tablename__ = "executions"
@@ -19,7 +17,7 @@ class Execution(Base):
     triggered_by = Column(String)
 
     project = relationship("Project", back_populates="executions")
-    test_cases = relationship("TestCase", back_populates="execution")
+    test_cases = relationship("TestCase", back_populates="execution", cascade="all, delete-orphan")
 
 class TestCase(Base):
     __tablename__ = "test_cases"

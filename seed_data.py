@@ -1,56 +1,61 @@
-import random
+import random ,os
 from datetime import datetime, timedelta
-from sqlalchemy.orm import Session
-from app.database import SessionLocal, engine
-from app.models import Base, Project, Execution, TestCase
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from faker import Faker
 
-# Recreate tables
+from app.models import Project, Execution, TestCase
+from app.database import Base
+
+# Configure PostgreSQL DB URL here
+DATABASE_URL = os.getenv("DATABASE_URL")
+print(DATABASE_URL)
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(bind=engine)
+session = SessionLocal()
+fake = Faker()
+
+# Step 1: Drop all and recreate tables
 Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 
-db: Session = SessionLocal()
+# Step 2: Seed Projects
+projects = []
+for i in range(10):
+    project = Project(name=fake.unique.company())
+    session.add(project)
+    projects.append(project)
+session.commit()
 
-# Dummy project names
-projects = ["Project Alpha", "Project Beta"]
+# Step 3: Seed Executions and TestCases (100 days back, multiple executions/day)
+statuses = ["passed", "failed", "skipped"]
+start_date = datetime.now() - timedelta(days=100)
 
-# Create projects
-project_objs = []
-for name in projects:
-    project = Project(name=name)
-    db.add(project)
-    project_objs.append(project)
-
-db.commit()
-
-# Status pool
-statuses = ["PASSED", "FAILED", "SKIPPED"]
-status_weights = [0.7, 0.25, 0.05]
-
-# Create executions and test cases over last 100 days
-for project in project_objs:
-    for i in range(100):  # 100 days
-        execution_time = datetime.now() - timedelta(days=99 - i)
-        execution = Execution(
-            project_id=project.id,
-            executed_at=execution_time,
-            triggered_by="CI"
-        )
-        db.add(execution)
-        db.flush()  # Get execution.id
-
-        # 5 test cases per execution
-        for j in range(5):
-            status = random.choices(statuses, weights=status_weights)[0]
-            tc = TestCase(
-                execution_id=execution.id,
-                name=f"{project.name}_TC_{i}_{j}",
-                status=status,
-                duration_seconds=round(random.uniform(1.0, 15.0), 2),
-                error_message=None if status == "PASSED" else f"{status} on step {random.randint(1, 3)}"
+for day in range(100):
+    print('started for loop')
+    for _ in range(random.randint(1, 3)):  # 1-3 executions per day
+        print(day)
+        for project in random.sample(projects, k=random.randint(1, len(projects))):
+            execution = Execution(
+                project_id=project.id,
+                executed_at=start_date + timedelta(days=day, hours=random.randint(0, 23)),
+                triggered_by=fake.first_name()
             )
-            db.add(tc)
+            session.add(execution)
+            session.flush()  # Get execution.id before adding test cases
 
-db.commit()
-db.close()
+            for i in range(random.randint(5, 20)):  # 5-20 test cases per execution
+                status = random.choices(statuses, weights=[0.7, 0.2, 0.1])[0]
+                test_case = TestCase(
+                    execution_id=execution.id,
+                    name=f"TestCase_{i+1}",
+                    status=status,
+                    duration_seconds=round(random.uniform(0.5, 5.0), 2),
+                    error_message=fake.sentence() if status == "failed" else None
+                )
+                session.add(test_case)
 
-print("✅ Dummy test execution data seeded for 100 days.")
+session.commit()
+session.close()
+
+print("✅ Database seeded with sample data.")
