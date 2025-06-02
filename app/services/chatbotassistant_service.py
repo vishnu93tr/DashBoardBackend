@@ -25,17 +25,24 @@ class QueryService:
     @staticmethod
     def process_question(task_id: str, question: str):
         try:
-             # Generate SQL for all types now
+            # ✅ Proper in-progress placeholder in Redis
+            in_progress_status = {"task_id": task_id, "status": "in_progress"}
+            r.set(task_id, json.dumps(in_progress_status))
+            logger.info(f"🔄 Task {task_id} marked as in_progress in Redis")
+
+            # 🧠 Generate SQL and get result
             logger.info(f"💡 Generating SQL for task_id={task_id}")
             result = generate_sql_and_execute(question)
+
             result["task_id"] = task_id
             result["status"] = "done" if "error" not in result else "error"
 
+            # ✅ Overwrite result
             r.set(task_id, json.dumps(result))
             QueryService.push_result(task_id, result)
 
         except Exception as e:
-            result = {"status": "error", "task_id": task_id, "error": str(e)}
+            result = {"task_id": task_id, "status": "error", "error": str(e)}
             r.set(task_id, json.dumps(result))
             QueryService.push_result(task_id, result)
 
